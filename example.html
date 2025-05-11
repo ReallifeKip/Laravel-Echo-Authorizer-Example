@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+</html>
+<script>
+    import Echo from 'laravel-echo';
+    import Pusher from 'pusher-js';
+    let wPusher = Pusher;
+    let wEcho = new Echo({
+        broadcaster: 'reverb',
+        key: '{REVERB_APP_KEY}',
+        wsHost: '{host}',
+        wsPort: '{port}',
+        forceTLS: true, // 👈 Enable if you're using HTTPS
+        enabledTransports: ['ws', 'wss'],
+        authorizer: channel => ({
+            authorize: (socketId, callback) => {
+            fetch('{authEndpoint}', {
+                headers: {
+                    Authorization: `Bearer {token}`, // 👈 Pass your API token for authentication (e.g. Sanctum, Passport, etc.)
+                },
+                method: 'POST',
+                body: new URLSearchParams({
+                    socket_id: socketId,
+                    channel_name: channel.name
+                })
+            })
+                .then(
+                    async e => callback(null, await e.json()) // 👈 Required: inform Echo that the subscription was successful
+                )
+                .catch(e => {
+                    console.error('error', e)
+                    callback(true, null); // 👈 Required: inform Echo that the subscription failed
+                })
+            }
+        }),
+    });
+</script>
